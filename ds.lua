@@ -81,16 +81,18 @@ createToggle("Blink Lag", function(state)
     settings().Network.IncomingReplicationLag = state and 1000 or 0
 end)
 
--- PHYSICS LOOP
+-- NEW MAC-SAFE PHYSICS LOOP
 RS.PostSimulation:Connect(function()
     if physActive then
         local Char = LP.Character
         local Root = Char and Char:FindFirstChild("HumanoidRootPart")
         if Root then
-            local oldCF = Root.CFrame
-            Root.CFrame = oldCF * CFrame.new(0, 0.03, 0)
+            -- We use a small horizontal velocity jitter
+            -- This moves your hitbox without triggering the "Anti-TP" death
+            local oldV = Root.AssemblyLinearVelocity
+            Root.AssemblyLinearVelocity = Vector3.new(math.random(-20, 20), -5, math.random(-20, 20))
             RS.RenderStepped:Wait()
-            Root.CFrame = oldCF
+            Root.AssemblyLinearVelocity = oldV
         end
     end
 end)
