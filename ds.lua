@@ -22,7 +22,7 @@ Frame.Position = UDim2.new(0, 20, 0, 20)
 Frame.BackgroundColor3 = Color3.fromRGB(15,15,15)
 Frame.BorderSizePixel = 0
 Frame.Active = true
-Frame.Draggable = true -- Legacy drag for simplicity
+Frame.Draggable = true 
 Frame.Parent = ScreenGui
 
 local UICorner = Instance.new("UICorner", Frame)
@@ -67,4 +67,44 @@ local function createToggle(name, callback)
     Instance.new("UICorner", Knob).CornerRadius = UDim.new(1, 0)
 
     local state = false
-    Btn.MouseButton1Down
+    Btn.MouseButton1Down:Connect(function()
+        state = not state
+        local knobPos = state and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9)
+        local bgColor = state and Color3.fromRGB(0, 180, 0) or Color3.fromRGB(40,40,40)
+        
+        TweenService:Create(Knob, TweenInfo.new(0.2), {Position = knobPos}):Play()
+        TweenService:Create(Btn, TweenInfo.new(0.2), {BackgroundColor3 = bgColor}):Play()
+        callback(state)
+    end)
+end
+
+-- RAKNET DESYNC
+createToggle("RakNet Desync", function(state)
+    if plsraknet and plsraknet.desync then
+        plsraknet.desync(state)
+    end
+end)
+
+-- PHYSICS DESYNC
+local physicsActive = false
+createToggle("Phys Desync", function(state)
+    physicsActive = state
+end)
+
+-- BLINK (Fake Lag)
+createToggle("Blink (Lag)", function(state)
+    settings().Network.IncomingReplicationLag = state and 1000 or 0
+end)
+
+-- LOOP FOR PHYSICS DESYNC
+RunService.PostSimulation:Connect(function()
+    if physicsActive then
+        local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+        if Root then
+            local oldV = Root.AssemblyLinearVelocity
+            Root.AssemblyLinearVelocity = Vector3.new(0, -5000, 0)
+            RunService.RenderStepped:Wait()
+            Root.AssemblyLinearVelocity = oldV
+        end
+    end
+end)
