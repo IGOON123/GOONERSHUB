@@ -1,6 +1,6 @@
 --[[
-    SAB / XEN - MAC PRO V17 (STABILIZED ANCHOR)
-    Total Camera Lock + Anti-Void Velocity
+    SAB / XEN - MAC PRO V18 (DESYNC FIXED)
+    High-Frequency CFrame Jitter + Camera Lock
 ]]
 
 local LP = game:GetService("Players").LocalPlayer
@@ -13,14 +13,14 @@ local ScreenGui = Instance.new("ScreenGui", CoreGui or LP:WaitForChild("PlayerGu
 local Main = Instance.new("Frame", ScreenGui)
 Main.Size = UDim2.new(0, 200, 0, 150)
 Main.Position = UDim2.new(0.05, 0, 0.4, 0)
-Main.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 Main.Active = true
 Main.Draggable = true
 Instance.new("UICorner", Main)
 
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, 0, 0, 30)
-Title.Text = "SAB MAC V17"
+Title.Text = "SAB MAC V18"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.BackgroundTransparency = 1
 
@@ -57,18 +57,8 @@ end
 createToggle("SAB Desync", 45, function(v) desyncActive = v end)
 createToggle("Server Pos ESP", 90, function(v) espActive = v end)
 
--- 3. THE FIX: CAMERA ANCHORING
-RS.RenderStepped:Connect(function()
-    local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-    if desyncActive and Root then
-        -- Force the camera to stay at a fixed distance from your REAL position
-        -- This ignores the "jitter" caused by the desync loop
-        Camera.CameraSubject = LP.Character:FindFirstChild("Humanoid")
-        Camera.Focus = Root.CFrame
-    end
-end)
-
--- 4. VELOCITY DESYNC (MAP SAFE)
+-- 3. THE DESYNC (HITBOX BREAK)
+-- This moves your character 20 studs away and back every frame.
 RS.Heartbeat:Connect(function()
     local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
     if not Root or not desyncActive then 
@@ -76,18 +66,28 @@ RS.Heartbeat:Connect(function()
         return 
     end
 
-    local oldVel = Root.AssemblyLinearVelocity
+    local oldCF = Root.CFrame
+    -- We flick you 20 studs into the air/side and back instantly
+    local desyncCF = oldCF * CFrame.new(0, 20, 0)
     
-    -- Jitter Velocity without moving CFrame (Anti-Void)
-    Root.AssemblyLinearVelocity = Vector3.new(math.random(-500, 500), 0, math.random(-500, 500))
+    Root.CFrame = desyncCF
     
     if espActive then
         ServerDot.Transparency = 0.5
-        ServerDot.CFrame = Root.CFrame * CFrame.new(0, 4, 0)
+        ServerDot.CFrame = desyncCF
     else
         ServerDot.Transparency = 1
     end
 
     RS.RenderStepped:Wait()
-    Root.AssemblyLinearVelocity = oldVel
+    Root.CFrame = oldCF
+end)
+
+-- 4. THE CAMERA LOCK (STOPS SHAKE)
+RS.RenderStepped:Connect(function()
+    local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+    if desyncActive and Root then
+        -- This keeps your view locked to your REAL position
+        Camera.Focus = Root.CFrame
+    end
 end)
