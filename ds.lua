@@ -1,72 +1,70 @@
--- MAC GUI: DESYNC + BLINK (FAKE LAG)
-local ScreenGui = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local BlinkBtn = Instance.new("TextButton")
-local DesyncBtn = Instance.new("TextButton")
-local UIListLayout = Instance.new("UIListLayout")
+--[[
+	WARNING: Heads up! This script has not been verified by ScriptBlox. Use at your own risk!
+]]
+-- Open source for y'all ❤️‍🩹🥹✌️
 
-local TargetParent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
-ScreenGui.Parent = TargetParent
+local plsraknet = Raknet or raknet
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local LP = game.Players.LocalPlayer
+
+-- GUI SETUP
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "MacUltimate"
+ScreenGui.Parent = CoreGui or LP:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
-MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-MainFrame.Position = UDim2.new(0.1, 0, 0.1, 0)
-MainFrame.Size = UDim2.new(0, 160, 0, 110)
-MainFrame.Active = true
-MainFrame.Draggable = true
+local Frame = Instance.new("Frame")
+Frame.Size = UDim2.new(0, 200, 0, 160)
+Frame.Position = UDim2.new(0, 20, 0, 20)
+Frame.BackgroundColor3 = Color3.fromRGB(15,15,15)
+Frame.BorderSizePixel = 0
+Frame.Active = true
+Frame.Draggable = true -- Legacy drag for simplicity
+Frame.Parent = ScreenGui
 
-UIListLayout.Parent = MainFrame
-UIListLayout.Padding = UDim.new(0, 5)
-UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+local UICorner = Instance.new("UICorner", Frame)
+UICorner.CornerRadius = UDim.new(0, 8)
 
-local function createBtn(text)
-    local btn = Instance.new("TextButton")
-    btn.Parent = MainFrame
-    btn.Size = UDim2.new(0, 150, 0, 45)
-    btn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Text = text
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 14
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-    return btn
-end
+local UIList = Instance.new("UIListLayout", Frame)
+UIList.Padding = UDim.new(0, 5)
+UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIList.SortOrder = Enum.SortOrder.LayoutOrder
 
-local bBtn = createBtn("Blink: OFF")
-local dBtn = createBtn("Desync: OFF")
+-- TOGGLE CREATOR FUNCTION
+local function createToggle(name, callback)
+    local TFrame = Instance.new("Frame")
+    TFrame.Size = UDim2.new(0, 180, 0, 45)
+    TFrame.BackgroundTransparency = 1
+    TFrame.Parent = Frame
 
-local blinkActive = false
-local desyncActive = false
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(1, -70, 1, 0)
+    Label.Position = UDim2.new(0, 10, 0, 0)
+    Label.BackgroundTransparency = 1
+    Label.Text = name
+    Label.TextColor3 = Color3.fromRGB(255,255,255)
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Font = Enum.Font.SourceSansBold
+    Label.TextSize = 14
+    Label.Parent = TFrame
 
--- BLINK LOGIC (Stand in place for others)
-bBtn.MouseButton1Down:Connect(function()
-    blinkActive = not blinkActive
-    bBtn.Text = blinkActive and "Blink: ON" or "Blink: OFF"
-    bBtn.BackgroundColor3 = blinkActive and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(45, 45, 45)
-    
-    if blinkActive then
-        settings().Network.IncomingReplicationLag = 1000 -- Freezes you for others
-    else
-        settings().Network.IncomingReplicationLag = 0 -- Teleports you to your real spot
-    end
-end)
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(0, 45, 0, 22)
+    Btn.Position = UDim2.new(1, -55, 0.5, -11)
+    Btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    Btn.Text = ""
+    Btn.Parent = TFrame
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(1, 0)
 
--- DESYNC LOGIC
-dBtn.MouseButton1Down:Connect(function()
-    desyncActive = not desyncActive
-    dBtn.Text = desyncActive and "Desync: ON" or "Desync: OFF"
-    dBtn.BackgroundColor3 = desyncActive and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(45, 45, 45)
-end)
+    local Knob = Instance.new("Frame")
+    Knob.Size = UDim2.new(0, 18, 0, 18)
+    Knob.Position = UDim2.new(0, 2, 0.5, -9)
+    Knob.BackgroundColor3 = Color3.fromRGB(200,200,200)
+    Knob.Parent = Btn
+    Instance.new("UICorner", Knob).CornerRadius = UDim.new(1, 0)
 
-game:GetService("RunService").PostSimulation:Connect(function()
-    if desyncActive then
-        local Root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if Root then
-            local oldV = Root.AssemblyLinearVelocity
-            Root.AssemblyLinearVelocity = Vector3.new(0, -5000, 0)
-            game:GetService("RunService").RenderStepped:Wait()
-            Root.AssemblyLinearVelocity = oldV
-        end
-    end
-end)
+    local state = false
+    Btn.MouseButton1Down
