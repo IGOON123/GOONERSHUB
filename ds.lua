@@ -1,6 +1,6 @@
 --[[
-    SAB / XEN - MACBOOK "STILL" EDITION
-    Linear Back-Flick Method (Kills Camera Vibration)
+    SAB / XEN - MAC PRO "NO-SHAKE" ELITE
+    Final Fix for Streamable Shake Issue.
 ]]
 
 local LP = game:GetService("Players").LocalPlayer
@@ -10,14 +10,14 @@ local CoreGui = game:GetService("CoreGui")
 
 -- GUI SETUP
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SAB_Mac_Still"
+ScreenGui.Name = "SAB_Mac_Elite"
 ScreenGui.Parent = CoreGui or LP:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
 local Frame = Instance.new("Frame")
 Frame.Size = UDim2.new(0, 200, 0, 180)
 Frame.Position = UDim2.new(0.05, 0, 0.4, 0)
-Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 Frame.Active = true
 Frame.Draggable = true 
 Frame.Parent = ScreenGui
@@ -58,33 +58,33 @@ local function createToggle(name, color, callback)
     end)
 end
 
--- 1. NET OVERRIDE (Essential)
+-- 1. NET OVERRIDE (Purple)
 createToggle("Net Override", Color3.fromRGB(160, 50, 255), function(state)
     if state then sethiddenproperty(LP, "SimulationRadius", 10000) end
 end)
 
--- 2. SAB DESYNC (The Jitter)
+-- 2. ELITE DESYNC (Green)
 local desyncActive = false
 createToggle("SAB Desync", Color3.fromRGB(0, 255, 180), function(state)
     desyncActive = state
 end)
 
--- 3. BLINK (Lag Snap)
+-- 3. BLINK (Orange)
 createToggle("Blink Snap", Color3.fromRGB(255, 150, 0), function(state)
     settings().Network.IncomingReplicationLag = state and 1000 or 0
 end)
 
--- THE FIX: "BACK-FLICK" PHYSICS
+-- THE FIX: VELOCITY OVERRIDE (NO-SHAKE)
 RS.Heartbeat:Connect(function()
     if desyncActive then
         local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
         if Root then
-            local oldCF = Root.CFrame
-            -- Instead of random jitter, we flick backwards based on where you face
-            -- This is significantly easier on the Mac camera
-            Root.CFrame = oldCF * CFrame.new(0, 0, 15) 
+            local oldVel = Root.Velocity
+            -- We set velocity to an insane number to desync the hitbox 
+            -- but keep the CFrame (Position) perfectly still for the camera.
+            Root.Velocity = Vector3.new(9e9, 9e9, 9e9) 
             RS.RenderStepped:Wait()
-            Root.CFrame = oldCF
+            Root.Velocity = oldVel
         end
     end
 end)
