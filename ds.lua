@@ -1,34 +1,36 @@
 --[[
-    SAB / XEN - MAC PRO "SILENT" DESYNC
-    No GUI. No Shake. Just Desync.
+    SAB / XEN - SERVER POSITION DESYNC
+    MAC-ONLY: No Shake, No GUI, Pure Desync.
 ]]
 
 local LP = game:GetService("Players").LocalPlayer
 local RS = game:GetService("RunService")
 
--- 1. SILENT NET BOOST (Essential for Mac stability)
+-- 1. SILENT NET OVERRIDE
+-- This forces the server to prioritize your local physics data.
 sethiddenproperty(LP, "SimulationRadius", 10000)
 sethiddenproperty(LP, "MaxSimulationRadius", 10000)
 
--- 2. THE DESYNC LOOP (Velocity Flick)
--- This jitters your hitbox for the server without moving your camera's focus.
+-- 2. THE SERVER-POS FLICKER
 RS.Heartbeat:Connect(function()
     local Char = LP.Character
     local Root = Char and Char:FindFirstChild("HumanoidRootPart")
     
     if Root then
+        -- Store your real velocity
         local oldVel = Root.Velocity
         
-        -- High-frequency velocity jitter (SAB Style)
-        -- We use 9e9 to overwhelm the server's hit registration
-        Root.Velocity = Vector3.new(9e9, 9e9, 9e9) 
+        -- SERVER POS DESYNC:
+        -- We set a massive AssemblyLinearVelocity. 
+        -- To the server, your "Position" is now "Infinite" or "NaN"
+        Root.AssemblyLinearVelocity = Vector3.new(10^6, 10^6, 10^6)
         
-        -- Wait for the physics frame to register the "fake" position
+        -- Wait for the physics engine to replicate this "Fake Position"
         RS.RenderStepped:Wait()
         
-        -- Reset velocity before the next frame so you can still move normally
-        Root.Velocity = oldVel
+        -- Reset so you don't actually fly away
+        Root.AssemblyLinearVelocity = oldVel
     end
 end)
 
-print("SAB Desync Loaded - No Shake Edition")
+print("Server-Pos Desync Active - MacBook Pro Optimized")
