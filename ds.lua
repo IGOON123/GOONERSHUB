@@ -1,23 +1,24 @@
 --[[
-    SAB / XEN - MAC STABLE EDITION
-    No-Shake + Anti-Die logic
+    SAB / XEN - MAC ZERO-SHAKE EDITION
+    Camera-Proxy Logic to stop all screen vibration.
 ]]
 
 local LP = game:GetService("Players").LocalPlayer
 local RS = game:GetService("RunService")
 local TS = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
+local Camera = workspace.CurrentCamera
 
 -- GUI SETUP
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SAB_Mac_Stable"
+ScreenGui.Name = "SAB_ZeroShake"
 ScreenGui.Parent = CoreGui or LP:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
 local Frame = Instance.new("Frame")
 Frame.Size = UDim2.new(0, 200, 0, 180)
 Frame.Position = UDim2.new(0.05, 0, 0.4, 0)
-Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Frame.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
 Frame.Active = true
 Frame.Draggable = true 
 Frame.Parent = ScreenGui
@@ -39,13 +40,13 @@ local function createToggle(name, color, callback)
     Label.Text = name
     Label.TextColor3 = Color3.fromRGB(255, 255, 255)
     Label.Font = Enum.Font.SourceSansBold
-    Label.TextSize = 14
+    Label.TextSize = 13
     Label.Parent = TFrame
 
     local Btn = Instance.new("TextButton")
-    Btn.Size = UDim2.new(0, 40, 0, 20)
-    Btn.Position = UDim2.new(1, -45, 0.5, -10)
-    Btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    Btn.Size = UDim2.new(0, 42, 0, 22)
+    Btn.Position = UDim2.new(1, -50, 0.5, -11)
+    Btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     Btn.Text = ""
     Btn.Parent = TFrame
     Instance.new("UICorner", Btn).CornerRadius = UDim.new(1, 0)
@@ -53,40 +54,48 @@ local function createToggle(name, color, callback)
     local state = false
     Btn.MouseButton1Down:Connect(function()
         state = not state
-        TS:Create(Btn, TweenInfo.new(0.2), {BackgroundColor3 = state and color or Color3.fromRGB(40, 40, 40)}):Play()
+        TS:Create(Btn, TweenInfo.new(0.2), {BackgroundColor3 = state and color or Color3.fromRGB(30, 30, 30)}):Play()
         callback(state)
     end)
 end
 
--- 1. NET OVERRIDE (Essential)
-createToggle("Net Override", Color3.fromRGB(180, 0, 255), function(state)
+-- 1. NET OVERRIDE (Purple)
+createToggle("Net Override", Color3.fromRGB(160, 50, 255), function(state)
     if state then sethiddenproperty(LP, "SimulationRadius", 10000) end
 end)
 
--- 2. STABLE SAB (No-Shake Jitter)
+-- 2. SAB DESYNC (Green)
 local desyncActive = false
-createToggle("SAB Desync", Color3.fromRGB(0, 255, 150), function(state)
+createToggle("SAB Desync", Color3.fromRGB(0, 255, 180), function(state)
     desyncActive = state
 end)
 
--- 3. BLINK (Lag Snap)
-createToggle("Blink", Color3.fromRGB(255, 100, 0), function(state)
+-- 3. BLINK (Orange)
+createToggle("Blink Snap", Color3.fromRGB(255, 150, 0), function(state)
     settings().Network.IncomingReplicationLag = state and 1000 or 0
 end)
 
--- STABLE PHYSICS LOOP
+-- THE FIX: CAMERA PROXY
+RS.RenderStepped:Connect(function()
+    if desyncActive then
+        local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+        if Root then
+            -- We force the camera to stay at the "True" CFrame before the jitter happens
+            Camera.Focus = Root.CFrame
+        end
+    end
+end)
+
+-- THE DESYNC: HEARTBEAT (Runs after Camera)
 RS.Heartbeat:Connect(function()
     if desyncActive then
-        pcall(function()
-            local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-            if Root then
-                local oldCF = Root.CFrame
-                -- Reduced to 3 studs to avoid Anti-Cheat death
-                -- Heartbeat + Wait creates the choppy look without the shake
-                Root.CFrame = oldCF * CFrame.new(math.random(-3, 3), 0, math.random(-3, 3))
-                RS.RenderStepped:Wait()
-                Root.CFrame = oldCF
-            end
-        end)
+        local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+        if Root then
+            local oldCF = Root.CFrame
+            -- Jitter for the server
+            Root.CFrame = oldCF * CFrame.new(math.random(-5, 5), 0, math.random(-5, 5))
+            RS.RenderStepped:Wait()
+            Root.CFrame = oldCF
+        end
     end
 end)
