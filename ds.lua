@@ -1,9 +1,9 @@
--- MAC DESYNC GUI
+-- MAC DESYNC GUI (FIXED)
 local ScreenGui = Instance.new("ScreenGui")
 local ToggleButton = Instance.new("TextButton")
 local Corner = Instance.new("UICorner")
 
--- Setup GUI (Using PlayerGui if CoreGui is restricted)
+-- Setup GUI
 local Parent = game:GetService("CoreGui") or game.Players.LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.Parent = Parent
 
@@ -18,13 +18,13 @@ ToggleButton.TextSize = 16
 ToggleButton.Active = true
 ToggleButton.Draggable = true 
 
-Corner.CornerRadius = ToolPoint.new(0, 8)
+Corner.CornerRadius = UDim.new(0, 8) -- FIXED THIS LINE
 Corner.Parent = ToggleButton
 
 local Active = false
 local Connection
 
--- New Physics Logic
+-- Physics Logic
 local function StartDesync()
     Connection = game:GetService("RunService").PostSimulation:Connect(function()
         local Char = game.Players.LocalPlayer.Character
@@ -39,7 +39,7 @@ local function StartDesync()
 end
 
 -- Toggle Logic
-ToggleButton.MouseButton1Click:Connect(function()
+ToggleButton.MouseButton1Down:Connect(function() -- Better for Mac executors
     Active = not Active
     if Active then
         ToggleButton.Text = "Desync: ON"
