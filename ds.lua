@@ -1,6 +1,6 @@
 --[[
-    MACBOOK OPTIMIZED DESYNC (2026)
-    Fixes "Exception while welding" by using CFrame offsets instead of raw velocity.
+    MACBOOK ULTIMATE (Network + CFrame Edition)
+    Optimized for executors with Hidden Property support.
 ]]
 
 local LP = game:GetService("Players").LocalPlayer
@@ -8,19 +8,16 @@ local RS = game:GetService("RunService")
 local TS = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 
--- Check for RakNet support (Common in high-end Mac executors)
-local plsraknet = Raknet or raknet
-
 -- GUI SETUP
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "MacSafeDesync"
+ScreenGui.Name = "MacNetDesync"
 ScreenGui.Parent = CoreGui or LP:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
 local Frame = Instance.new("Frame")
 Frame.Size = UDim2.new(0, 200, 0, 160)
 Frame.Position = UDim2.new(0.05, 0, 0.4, 0)
-Frame.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 Frame.BorderSizePixel = 0
 Frame.Active = true
 Frame.Draggable = true 
@@ -58,40 +55,40 @@ local function createToggle(name, callback)
     local state = false
     Btn.MouseButton1Down:Connect(function()
         state = not state
-        TS:Create(Btn, TweenInfo.new(0.2), {BackgroundColor3 = state and Color3.fromRGB(0, 180, 0) or Color3.fromRGB(40, 40, 40)}):Play()
+        TS:Create(Btn, TweenInfo.new(0.2), {BackgroundColor3 = state and Color3.fromRGB(120, 0, 255) or Color3.fromRGB(40, 40, 40)}):Play()
         callback(state)
     end)
 end
 
--- RAKNET DESYNC
-createToggle("RakNet Desync", function(state)
-    if plsraknet and plsraknet.desync then
-        plsraknet.desync(state)
+-- 1. NETWORK DESYNC (Uses your hidden property support)
+createToggle("Network Owner", function(state)
+    if state then
+        sethiddenproperty(LP, "SimulationRadius", 10000)
+        sethiddenproperty(LP, "MaxSimulationRadius", 10000)
+    else
+        sethiddenproperty(LP, "SimulationRadius", 100)
     end
 end)
 
--- SAFE MAC DESYNC
+-- 2. SAFE VISUAL DESYNC
 local physActive = false
 createToggle("Safe Desync", function(state)
     physActive = state
 end)
 
--- BLINK (LAG)
+-- 3. BLINK (LAG)
 createToggle("Blink Lag", function(state)
     settings().Network.IncomingReplicationLag = state and 1000 or 0
 end)
 
--- THE PHYSICS LOOP (MAC OPTIMIZED)
+-- PHYSICS LOOP
 RS.PostSimulation:Connect(function()
     if physActive then
         local Char = LP.Character
         local Root = Char and Char:FindFirstChild("HumanoidRootPart")
         if Root then
-            -- We use a tiny CFrame offset + a safe velocity
-            -- This jitters your hitbox without snapping welds
             local oldCF = Root.CFrame
-            Root.CFrame = oldCF * CFrame.new(0, 0.02, 0)
-            Root.AssemblyLinearVelocity = Vector3.new(0, -10, 0)
+            Root.CFrame = oldCF * CFrame.new(0, 0.03, 0)
             RS.RenderStepped:Wait()
             Root.CFrame = oldCF
         end
