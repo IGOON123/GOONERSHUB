@@ -1,6 +1,6 @@
 --[[
-    SAB / XEN MAC EDITION
-    Rewritten for MacBook compatibility (No Velocity = No Welding Errors)
+    SAB / XEN - MAC STABLE EDITION
+    No-Shake + Anti-Die logic
 ]]
 
 local LP = game:GetService("Players").LocalPlayer
@@ -10,7 +10,7 @@ local CoreGui = game:GetService("CoreGui")
 
 -- GUI SETUP
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SAB_Xen_Mac"
+ScreenGui.Name = "SAB_Mac_Stable"
 ScreenGui.Parent = CoreGui or LP:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
@@ -58,12 +58,12 @@ local function createToggle(name, color, callback)
     end)
 end
 
--- 1. NET OVERRIDE (Purple)
+-- 1. NET OVERRIDE (Essential)
 createToggle("Net Override", Color3.fromRGB(180, 0, 255), function(state)
     if state then sethiddenproperty(LP, "SimulationRadius", 10000) end
 end)
 
--- 2. XEN DESYNC (The Choppy Jitter)
+-- 2. STABLE SAB (No-Shake Jitter)
 local desyncActive = false
 createToggle("SAB Desync", Color3.fromRGB(0, 255, 150), function(state)
     desyncActive = state
@@ -74,17 +74,19 @@ createToggle("Blink", Color3.fromRGB(255, 100, 0), function(state)
     settings().Network.IncomingReplicationLag = state and 1000 or 0
 end)
 
--- SAB/XEN MAC PHYSICS LOOP
+-- STABLE PHYSICS LOOP
 RS.Heartbeat:Connect(function()
     if desyncActive then
-        local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-        if Root then
-            local oldCF = Root.CFrame
-            -- Rapidly shifts your CFrame back and forth horizontally
-            -- This creates the "choppy" look without breaking welds
-            Root.CFrame = oldCF * CFrame.new(math.random(-8, 8), 0, math.random(-8, 8))
-            RS.RenderStepped:Wait()
-            Root.CFrame = oldCF
-        end
+        pcall(function()
+            local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+            if Root then
+                local oldCF = Root.CFrame
+                -- Reduced to 3 studs to avoid Anti-Cheat death
+                -- Heartbeat + Wait creates the choppy look without the shake
+                Root.CFrame = oldCF * CFrame.new(math.random(-3, 3), 0, math.random(-3, 3))
+                RS.RenderStepped:Wait()
+                Root.CFrame = oldCF
+            end
+        end)
     end
 end)
