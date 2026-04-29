@@ -33,7 +33,7 @@ UIList.Padding = UDim.new(0, 5)
 UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 UIList.SortOrder = Enum.SortOrder.LayoutOrder
 
--- TOGGLE CREATOR FUNCTION
+-- TOGGLE CREATOR
 local function createToggle(name, callback)
     local TFrame = Instance.new("Frame")
     TFrame.Size = UDim2.new(0, 180, 0, 45)
@@ -72,39 +72,4 @@ local function createToggle(name, callback)
         local knobPos = state and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9)
         local bgColor = state and Color3.fromRGB(0, 180, 0) or Color3.fromRGB(40,40,40)
         
-        TweenService:Create(Knob, TweenInfo.new(0.2), {Position = knobPos}):Play()
-        TweenService:Create(Btn, TweenInfo.new(0.2), {BackgroundColor3 = bgColor}):Play()
-        callback(state)
-    end)
-end
-
--- RAKNET DESYNC
-createToggle("RakNet Desync", function(state)
-    if plsraknet and plsraknet.desync then
-        plsraknet.desync(state)
-    end
-end)
-
--- PHYSICS DESYNC
-local physicsActive = false
-createToggle("Phys Desync", function(state)
-    physicsActive = state
-end)
-
--- BLINK (Fake Lag)
-createToggle("Blink (Lag)", function(state)
-    settings().Network.IncomingReplicationLag = state and 1000 or 0
-end)
-
--- LOOP FOR PHYSICS DESYNC
-RunService.PostSimulation:Connect(function()
-    if physicsActive then
-        local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-        if Root then
-            local oldV = Root.AssemblyLinearVelocity
-            Root.AssemblyLinearVelocity = Vector3.new(0, -5000, 0)
-            RunService.RenderStepped:Wait()
-            Root.AssemblyLinearVelocity = oldV
-        end
-    end
-end)
+        TweenService:Create(Knob, TweenInfo.new(0.2), {Position = knobPos}):
