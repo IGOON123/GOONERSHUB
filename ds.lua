@@ -1,6 +1,6 @@
 --[[
-    SAB BRAINROT - MAC ULTIMATE EDITION
-    Optimized for MacBook (No Velocity = No Welding Errors)
+    SAB / XEN MAC EDITION
+    Rewritten for MacBook compatibility (No Velocity = No Welding Errors)
 ]]
 
 local LP = game:GetService("Players").LocalPlayer
@@ -10,14 +10,14 @@ local CoreGui = game:GetService("CoreGui")
 
 -- GUI SETUP
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SAB_Final"
+ScreenGui.Name = "SAB_Xen_Mac"
 ScreenGui.Parent = CoreGui or LP:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
 local Frame = Instance.new("Frame")
 Frame.Size = UDim2.new(0, 200, 0, 180)
 Frame.Position = UDim2.new(0.05, 0, 0.4, 0)
-Frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 Frame.Active = true
 Frame.Draggable = true 
 Frame.Parent = ScreenGui
@@ -58,15 +58,12 @@ local function createToggle(name, color, callback)
     end)
 end
 
--- 1. NET OVERRIDE (Essential for Mac)
+-- 1. NET OVERRIDE (Purple)
 createToggle("Net Override", Color3.fromRGB(180, 0, 255), function(state)
-    if state then
-        sethiddenproperty(LP, "SimulationRadius", 10000)
-        sethiddenproperty(LP, "MaxSimulationRadius", 10000)
-    end
+    if state then sethiddenproperty(LP, "SimulationRadius", 10000) end
 end)
 
--- 2. BRAINROT DESYNC (The TikTok Jitter)
+-- 2. XEN DESYNC (The Choppy Jitter)
 local desyncActive = false
 createToggle("SAB Desync", Color3.fromRGB(0, 255, 150), function(state)
     desyncActive = state
@@ -77,14 +74,15 @@ createToggle("Blink", Color3.fromRGB(255, 100, 0), function(state)
     settings().Network.IncomingReplicationLag = state and 1000 or 0
 end)
 
--- PHYSICS LOOP
+-- SAB/XEN MAC PHYSICS LOOP
 RS.Heartbeat:Connect(function()
     if desyncActive then
         local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
         if Root then
             local oldCF = Root.CFrame
-            -- Extremley fast CFrame shifting for the "ghosting" look
-            Root.CFrame = oldCF * CFrame.new(math.random(-5, 5), 0, math.random(-5, 5))
+            -- Rapidly shifts your CFrame back and forth horizontally
+            -- This creates the "choppy" look without breaking welds
+            Root.CFrame = oldCF * CFrame.new(math.random(-8, 8), 0, math.random(-8, 8))
             RS.RenderStepped:Wait()
             Root.CFrame = oldCF
         end
