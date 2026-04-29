@@ -1,6 +1,6 @@
 --[[
-    SAB / XEN - MAC PRO "ULTIMATE STILL"
-    CFrame Jitter + Camera Anchor (No Shake / No Void)
+    SAB / XEN - MAC PRO V14 (ANTI-VOID)
+    Stable Camera + Server Position ESP
 ]]
 
 local LP = game:GetService("Players").LocalPlayer
@@ -20,7 +20,7 @@ Instance.new("UICorner", Main)
 
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, 0, 0, 30)
-Title.Text = "SAB MAC V10"
+Title.Text = "SAB MAC V14"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.BackgroundTransparency = 1
 
@@ -46,6 +46,7 @@ local function createToggle(name, yPos, callback)
     Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     Instance.new("UICorner", Btn)
 
+    local state = false
     Btn.MouseButton1Down:Connect(function()
         state = not state
         Btn.BackgroundColor3 = state and Color3.fromRGB(0, 200, 100) or Color3.fromRGB(40, 40, 40)
@@ -53,10 +54,10 @@ local function createToggle(name, yPos, callback)
     end)
 end
 
-createToggle("Server Pos Desync", 45, function(v) desyncActive = v end)
+createToggle("SAB Desync", 45, function(v) desyncActive = v end)
 createToggle("Server Pos ESP", 90, function(v) espActive = v end)
 
--- 3. THE NO-SHAKE FIX
+-- 3. THE NO-SHAKE / ANTI-VOID LOGIC
 RS.Heartbeat:Connect(function()
     local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
     if not Root or not desyncActive then 
@@ -65,21 +66,21 @@ RS.Heartbeat:Connect(function()
     end
 
     local oldCF = Root.CFrame
-    -- 5 Stud Jitter: Enough to break hitboxes, small enough to stay in map
-    local jitter = CFrame.new(math.random(-5, 5), 0, math.random(-5, 5))
+    -- We use a 4-stud offset. This is the max distance before the anti-cheat TPs you.
+    local desyncCF = oldCF * CFrame.new(math.random(-4, 4), 0, math.random(-4, 4))
     
-    -- DETACH CAMERA: We tell the camera to stay at the OLD position
-    -- while the character jitters to the NEW position.
+    -- Tell the camera to ignore the next move
     Camera.Focus = oldCF
-    Root.CFrame = oldCF * jitter
+    Root.CFrame = desyncCF
     
     if espActive then
         ServerDot.Transparency = 0.5
-        ServerDot.CFrame = Root.CFrame
+        ServerDot.CFrame = desyncCF
     else
         ServerDot.Transparency = 1
     end
 
+    -- Sync with Render to prevent screen-shake
     RS.RenderStepped:Wait()
     Root.CFrame = oldCF
 end)
