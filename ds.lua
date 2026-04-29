@@ -1,53 +1,60 @@
--- MAC DESYNC GUI (FIXED)
+-- MAC DESYNC GUI (STABLE)
 local ScreenGui = Instance.new("ScreenGui")
 local ToggleButton = Instance.new("TextButton")
 local Corner = Instance.new("UICorner")
 
--- Setup GUI
-local Parent = game:GetService("CoreGui") or game.Players.LocalPlayer:WaitForChild("PlayerGui")
-ScreenGui.Parent = Parent
+-- Setup GUI - Fallback for executors that block CoreGui
+local TargetParent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.Name = "MacDesync"
+ScreenGui.Parent = TargetParent
+ScreenGui.ResetOnSpawn = false
 
 ToggleButton.Parent = ScreenGui
-ToggleButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-ToggleButton.Position = UDim2.new(0.1, 0, 0.1, 0)
-ToggleButton.Size = UDim2.new(0, 150, 0, 50)
-ToggleButton.Text = "Desync: OFF"
+ToggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ToggleButton.Position = UDim2.new(0.15, 0, 0.15, 0)
+ToggleButton.Size = UDim2.new(0, 160, 0, 50)
+ToggleButton.Text = "DESYNC: OFF"
 ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 ToggleButton.Font = Enum.Font.GothamBold
 ToggleButton.TextSize = 16
-ToggleButton.Active = true
 ToggleButton.Draggable = true 
+ToggleButton.Active = true
 
-Corner.CornerRadius = UDim.new(0, 8) -- FIXED THIS LINE
+Corner.CornerRadius = UDim.new(0, 10)
 Corner.Parent = ToggleButton
 
 local Active = false
 local Connection
 
--- Physics Logic
-local function StartDesync()
-    Connection = game:GetService("RunService").PostSimulation:Connect(function()
-        local Char = game.Players.LocalPlayer.Character
-        local Root = Char and Char:FindFirstChild("HumanoidRootPart")
-        if Root then
-            local oldV = Root.AssemblyLinearVelocity
-            Root.AssemblyLinearVelocity = Vector3.new(0, -5000, 0)
-            game:GetService("RunService").RenderStepped:Wait()
-            Root.AssemblyLinearVelocity = oldV
-        end
-    end)
-end
-
--- Toggle Logic
-ToggleButton.MouseButton1Down:Connect(function() -- Better for Mac executors
-    Active = not Active
+-- High-Priority Physics Logic
+local function ToggleLogic()
     if Active then
-        ToggleButton.Text = "Desync: ON"
-        ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
-        StartDesync()
+        Connection = game:GetService("RunService").PostSimulation:Connect(function()
+            local Char = game.Players.LocalPlayer.Character
+            local Root = Char and Char:FindFirstChild("HumanoidRootPart")
+            if Root then
+                local oldV = Root.AssemblyLinearVelocity
+                Root.AssemblyLinearVelocity = Vector3.new(0, -10000, 0)
+                game:GetService("RunService").RenderStepped:Wait()
+                Root.AssemblyLinearVelocity = oldV
+            end
+        end)
     else
-        ToggleButton.Text = "Desync: OFF"
-        ToggleButton.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
         if Connection then Connection:Disconnect() end
     end
+end
+
+-- MouseButton1Down is more reliable for Mac executors than Click
+ToggleButton.MouseButton1Down:Connect(function()
+    Active = not Active
+    if Active then
+        ToggleButton.Text = "DESYNC: ON"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+    else
+        ToggleButton.Text = "DESYNC: OFF"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+    end
+    ToggleLogic()
 end)
+
+print("Script Loaded - Press Button to Toggle")
