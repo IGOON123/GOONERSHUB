@@ -1,23 +1,24 @@
 --[[
-    SAB / XEN - MAC "STILL CAMERA" EDITION
-    Uses Humanoid CameraOffset to prevent screen vibration.
+    SAB / XEN - MAC "ULTIMATE STILL" EDITION
+    Detaches Camera from RootPart to kill the shake entirely.
 ]]
 
 local LP = game:GetService("Players").LocalPlayer
 local RS = game:GetService("RunService")
 local TS = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
+local Camera = workspace.CurrentCamera
 
 -- GUI SETUP
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SAB_NoShake_V3"
+ScreenGui.Name = "SAB_V4_NoShake"
 ScreenGui.Parent = CoreGui or LP:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
 local Frame = Instance.new("Frame")
 Frame.Size = UDim2.new(0, 200, 0, 180)
 Frame.Position = UDim2.new(0.05, 0, 0.4, 0)
-Frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 Frame.Active = true
 Frame.Draggable = true 
 Frame.Parent = ScreenGui
@@ -74,26 +75,40 @@ createToggle("Blink Snap", Color3.fromRGB(255, 150, 0), function(state)
     settings().Network.IncomingReplicationLag = state and 1000 or 0
 end)
 
--- THE FIX: CAMERA OFFSET JITTER
-RS.Heartbeat:Connect(function()
+-- THE FIX: CAMERA SUBJECT OVERRIDE
+RS.RenderStepped:Connect(function()
     local Char = LP.Character
-    local Hum = Char and Char:FindFirstChild("Humanoid")
     local Root = Char and Char:FindFirstChild("HumanoidRootPart")
     
-    if desyncActive and Hum and Root then
-        -- We move the character's Visual position
-        local jitter = Vector3.new(math.random(-10, 10), 0, math.random(-10, 10))
-        
-        -- To prevent screen shake, we offset the Humanoid Camera by the INVERSE of the jitter
-        -- This cancels out the movement for your eyes, but keeps it for the server
-        Root.CFrame = Root.CFrame * CFrame.new(jitter)
-        Hum.CameraOffset = -jitter 
-        
-        RS.RenderStepped:Wait()
-        
-        Root.CFrame = Root.CFrame * CFrame.new(-jitter)
-        Hum.CameraOffset = Vector3.new(0,0,0)
+    if desyncActive and Root then
+        -- This creates a tiny invisible part for the camera to follow
+        -- so it stays still while your body jitters
+        if not Char:FindFirstChild("CamPart") then
+            local p = Instance.new("Part", Char)
+            p.Name = "CamPart"
+            p.Transparency = 1
+            p.CanCollide = false
+            p.Size = Vector3.new(1,1,1)
+        end
+        local CamPart = Char.CamPart
+        CamPart.CFrame = Root.CFrame
+        Camera.CameraSubject = CamPart
     else
-        if Hum then Hum.CameraOffset = Vector3.new(0,0,0) end
+        if Char and Char:FindFirstChild("Humanoid") then
+            Camera.CameraSubject = Char.Humanoid
+        end
+    end
+end)
+
+-- THE JITTER
+RS.Heartbeat:Connect(function()
+    if desyncActive then
+        local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+        if Root then
+            local oldCF = Root.CFrame
+            Root.CFrame = oldCF * CFrame.new(math.random(-10, 10), 0, math.random(-10, 10))
+            RS.RenderStepped:Wait()
+            Root.CFrame = oldCF
+        end
     end
 end)
