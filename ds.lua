@@ -1,17 +1,16 @@
 --[[
-    SAB / XEN - MACBOOK PRO "NO-SHAKE" STABLE
-    Optimized for macOS executors to stop screen vibration.
+    SAB / XEN - MACBOOK "STILL" EDITION
+    Linear Back-Flick Method (Kills Camera Vibration)
 ]]
 
 local LP = game:GetService("Players").LocalPlayer
 local RS = game:GetService("RunService")
 local TS = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
-local Camera = workspace.CurrentCamera
 
 -- GUI SETUP
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SAB_Mac_Stable"
+ScreenGui.Name = "SAB_Mac_Still"
 ScreenGui.Parent = CoreGui or LP:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
@@ -59,33 +58,32 @@ local function createToggle(name, color, callback)
     end)
 end
 
--- 1. NET OVERRIDE (Purple)
+-- 1. NET OVERRIDE (Essential)
 createToggle("Net Override", Color3.fromRGB(160, 50, 255), function(state)
     if state then sethiddenproperty(LP, "SimulationRadius", 10000) end
 end)
 
--- 2. SAB DESYNC (Green)
+-- 2. SAB DESYNC (The Jitter)
 local desyncActive = false
 createToggle("SAB Desync", Color3.fromRGB(0, 255, 180), function(state)
     desyncActive = state
 end)
 
--- 3. BLINK (Orange)
+-- 3. BLINK (Lag Snap)
 createToggle("Blink Snap", Color3.fromRGB(255, 150, 0), function(state)
     settings().Network.IncomingReplicationLag = state and 1000 or 0
 end)
 
--- THE FIX: "POST-RENDER" JITTER
+-- THE FIX: "BACK-FLICK" PHYSICS
 RS.Heartbeat:Connect(function()
     if desyncActive then
         local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
         if Root then
             local oldCF = Root.CFrame
-            -- This creates the jitter for OTHER players
-            Root.CFrame = oldCF * CFrame.new(math.random(-12, 12), 0, math.random(-12, 12))
-            -- We wait exactly 1/60th of a second for the server to log the position
+            -- Instead of random jitter, we flick backwards based on where you face
+            -- This is significantly easier on the Mac camera
+            Root.CFrame = oldCF * CFrame.new(0, 0, 15) 
             RS.RenderStepped:Wait()
-            -- We put you back before the camera looks at you
             Root.CFrame = oldCF
         end
     end
