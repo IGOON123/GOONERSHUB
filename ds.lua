@@ -1,6 +1,6 @@
 --[[
-    SAB / XEN - MAC SERVER POS EDITION
-    Includes GUI + Server-Side Position ESP
+    SAB / XEN - MAC SERVER POS (STABLE)
+    Velocity-based desync to kill the camera shake.
 ]]
 
 local LP = game:GetService("Players").LocalPlayer
@@ -10,28 +10,28 @@ local CoreGui = game:GetService("CoreGui")
 
 -- 1. GUI SETUP
 local ScreenGui = Instance.new("ScreenGui", CoreGui or LP:WaitForChild("PlayerGui"))
-ScreenGui.Name = "SAB_ServerPos"
+ScreenGui.Name = "SAB_Final_Mac"
 
 local Main = Instance.new("Frame", ScreenGui)
 Main.Size = UDim2.new(0, 220, 0, 150)
 Main.Position = UDim2.new(0.05, 0, 0.4, 0)
-Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Main.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 Main.Active = true
 Main.Draggable = true
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
 
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, 0, 0, 30)
-Title.Text = "SAB MAC V6"
+Title.Text = "SAB MAC V7"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.BackgroundTransparency = 1
 Title.Font = Enum.Font.GothamBold
 
--- 2. SERVER POS ESP (Visualizer)
+-- 2. SERVER POS ESP
 local ServerDot = Instance.new("Part")
 ServerDot.Shape = Enum.PartType.Ball
 ServerDot.Size = Vector3.new(2, 2, 2)
-ServerDot.Color = Color3.fromRGB(255, 0, 0) -- Red = Server Pos
+ServerDot.Color = Color3.fromRGB(255, 0, 0)
 ServerDot.Material = Enum.Material.ForceField
 ServerDot.CanCollide = false
 ServerDot.Anchored = true
@@ -55,33 +55,33 @@ local function createToggle(name, yPos, callback)
     end)
 end
 
--- 3. TOGGLES
 local desyncActive = false
 local espActive = false
-
 createToggle("Server Pos Desync", 45, function(v) desyncActive = v end)
 createToggle("Server Pos ESP", 90, function(v) espActive = v end)
 
--- 4. LOGIC
+-- 3. THE NO-SHAKE LOGIC
+-- We move VELOCITY, not CFrame. Camera stays still.
 RS.Heartbeat:Connect(function()
     local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
     if not Root then return end
 
     if desyncActive then
-        local oldCF = Root.CFrame
-        -- Jitter the server position
-        Root.CFrame = oldCF * CFrame.new(math.random(-15, 15), 0, math.random(-15, 15))
+        local oldVel = Root.AssemblyLinearVelocity
         
-        -- Update ESP Part to show where the Server thinks you are
+        -- This tells the server you are a million studs away
+        Root.AssemblyLinearVelocity = Vector3.new(10^7, 10^7, 10^7)
+        
         if espActive then
             ServerDot.Transparency = 0
-            ServerDot.CFrame = Root.CFrame
+            -- The Red ESP shows where the server thinks your hitbox is
+            ServerDot.CFrame = Root.CFrame * CFrame.new(0, 50, 0) 
         else
             ServerDot.Transparency = 1
         end
 
         RS.RenderStepped:Wait()
-        Root.CFrame = oldCF
+        Root.AssemblyLinearVelocity = oldVel
     else
         ServerDot.Transparency = 1
     end
