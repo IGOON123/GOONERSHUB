@@ -1,6 +1,6 @@
 --[[
-    MACBOOK ULTIMATE (Network + CFrame Edition)
-    Optimized for executors with Hidden Property support.
+    SAB BRAINROT - MAC EDITION (2026)
+    Optimized for MacBook executors with sethiddenproperty support.
 ]]
 
 local LP = game:GetService("Players").LocalPlayer
@@ -10,15 +10,14 @@ local CoreGui = game:GetService("CoreGui")
 
 -- GUI SETUP
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "MacNetDesync"
+ScreenGui.Name = "SAB_Mac"
 ScreenGui.Parent = CoreGui or LP:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
 local Frame = Instance.new("Frame")
-Frame.Size = UDim2.new(0, 200, 0, 160)
+Frame.Size = UDim2.new(0, 200, 0, 180)
 Frame.Position = UDim2.new(0.05, 0, 0.4, 0)
-Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-Frame.BorderSizePixel = 0
+Frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 Frame.Active = true
 Frame.Draggable = true 
 Frame.Parent = ScreenGui
@@ -28,8 +27,7 @@ local UIList = Instance.new("UIListLayout", Frame)
 UIList.Padding = UDim.new(0, 5)
 UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
--- TOGGLE MAKER
-local function createToggle(name, callback)
+local function createToggle(name, color, callback)
     local TFrame = Instance.new("Frame")
     TFrame.Size = UDim2.new(0, 180, 0, 45)
     TFrame.BackgroundTransparency = 1
@@ -39,7 +37,7 @@ local function createToggle(name, callback)
     Label.Size = UDim2.new(1, -60, 1, 0)
     Label.BackgroundTransparency = 1
     Label.Text = name
-    Label.TextColor3 = Color3.fromRGB(230, 230, 230)
+    Label.TextColor3 = Color3.fromRGB(255, 255, 255)
     Label.Font = Enum.Font.SourceSansBold
     Label.TextSize = 14
     Label.Parent = TFrame
@@ -55,13 +53,13 @@ local function createToggle(name, callback)
     local state = false
     Btn.MouseButton1Down:Connect(function()
         state = not state
-        TS:Create(Btn, TweenInfo.new(0.2), {BackgroundColor3 = state and Color3.fromRGB(120, 0, 255) or Color3.fromRGB(40, 40, 40)}):Play()
+        TS:Create(Btn, TweenInfo.new(0.2), {BackgroundColor3 = state and color or Color3.fromRGB(40, 40, 40)}):Play()
         callback(state)
     end)
 end
 
--- 1. NETWORK DESYNC (Uses your hidden property support)
-createToggle("Network Owner", function(state)
+-- 1. NETWORK RADIUS (Essential for Mac SAB)
+createToggle("Net Boost", Color3.fromRGB(150, 0, 255), function(state)
     if state then
         sethiddenproperty(LP, "SimulationRadius", 10000)
         sethiddenproperty(LP, "MaxSimulationRadius", 10000)
@@ -70,27 +68,25 @@ createToggle("Network Owner", function(state)
     end
 end)
 
--- 2. SAFE VISUAL DESYNC
-local physActive = false
-createToggle("Safe Desync", function(state)
-    physActive = state
+-- 2. SAB VELOCITY (TikTok Style)
+local sabActive = false
+createToggle("SAB Desync", Color3.fromRGB(0, 255, 100), function(state)
+    sabActive = state
 end)
 
--- 3. BLINK (LAG)
-createToggle("Blink Lag", function(state)
+-- 3. BLINK (Lag Snap)
+createToggle("Blink", Color3.fromRGB(255, 100, 0), function(state)
     settings().Network.IncomingReplicationLag = state and 1000 or 0
 end)
 
--- NEW MAC-SAFE PHYSICS LOOP
+-- PHYSICS LOOP
 RS.PostSimulation:Connect(function()
-    if physActive then
-        local Char = LP.Character
-        local Root = Char and Char:FindFirstChild("HumanoidRootPart")
+    if sabActive then
+        local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
         if Root then
-            -- We use a small horizontal velocity jitter
-            -- This moves your hitbox without triggering the "Anti-TP" death
             local oldV = Root.AssemblyLinearVelocity
-            Root.AssemblyLinearVelocity = Vector3.new(math.random(-20, 20), -5, math.random(-20, 20))
+            -- Flickers velocity horizontally to create the TikTok "lag" look
+            Root.AssemblyLinearVelocity = Vector3.new(math.random(-50, 50), 0, math.random(-50, 50))
             RS.RenderStepped:Wait()
             Root.AssemblyLinearVelocity = oldV
         end
