@@ -1,25 +1,26 @@
 --[[
-    SAB / XEN - MAC PRO V16 (ZERO-SHAKE / ANTI-VOID)
-    Uses Velocity Prediction to break hitboxes without moving CFrame.
+    SAB / XEN - MAC PRO V17 (STABILIZED ANCHOR)
+    Total Camera Lock + Anti-Void Velocity
 ]]
 
 local LP = game:GetService("Players").LocalPlayer
 local RS = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
+local Camera = workspace.CurrentCamera
 
 -- 1. GUI SETUP
 local ScreenGui = Instance.new("ScreenGui", CoreGui or LP:WaitForChild("PlayerGui"))
 local Main = Instance.new("Frame", ScreenGui)
 Main.Size = UDim2.new(0, 200, 0, 150)
 Main.Position = UDim2.new(0.05, 0, 0.4, 0)
-Main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+Main.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 Main.Active = true
 Main.Draggable = true
 Instance.new("UICorner", Main)
 
 local Title = Instance.new("TextLabel", Main)
 Title.Size = UDim2.new(1, 0, 0, 30)
-Title.Text = "SAB MAC V16"
+Title.Text = "SAB MAC V17"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.BackgroundTransparency = 1
 
@@ -56,7 +57,18 @@ end
 createToggle("SAB Desync", 45, function(v) desyncActive = v end)
 createToggle("Server Pos ESP", 90, function(v) espActive = v end)
 
--- 3. THE FIX: VELOCITY PREDICTION
+-- 3. THE FIX: CAMERA ANCHORING
+RS.RenderStepped:Connect(function()
+    local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+    if desyncActive and Root then
+        -- Force the camera to stay at a fixed distance from your REAL position
+        -- This ignores the "jitter" caused by the desync loop
+        Camera.CameraSubject = LP.Character:FindFirstChild("Humanoid")
+        Camera.Focus = Root.CFrame
+    end
+end)
+
+-- 4. VELOCITY DESYNC (MAP SAFE)
 RS.Heartbeat:Connect(function()
     local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
     if not Root or not desyncActive then 
@@ -66,14 +78,12 @@ RS.Heartbeat:Connect(function()
 
     local oldVel = Root.AssemblyLinearVelocity
     
-    -- We set an 'Invalid' Velocity. This breaks the Server's ability to 
-    -- predict where you are, but your CFrame (Position) NEVER MOVES.
-    Root.AssemblyLinearVelocity = Vector3.new(0, -1000, 0)
+    -- Jitter Velocity without moving CFrame (Anti-Void)
+    Root.AssemblyLinearVelocity = Vector3.new(math.random(-500, 500), 0, math.random(-500, 500))
     
     if espActive then
         ServerDot.Transparency = 0.5
-        -- Shows where the server thinks your hitbox is (slightly offset)
-        ServerDot.CFrame = Root.CFrame * CFrame.new(0, 3, 0)
+        ServerDot.CFrame = Root.CFrame * CFrame.new(0, 4, 0)
     else
         ServerDot.Transparency = 1
     end
