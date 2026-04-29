@@ -1,6 +1,6 @@
 --[[
-    SAB / XEN - MAC TRUE SMOOTH EDITION
-    Forces the camera to ignore physics jitter.
+    SAB / XEN - MACBOOK PRO "NO-SHAKE" STABLE
+    Optimized for macOS executors to stop screen vibration.
 ]]
 
 local LP = game:GetService("Players").LocalPlayer
@@ -11,14 +11,14 @@ local Camera = workspace.CurrentCamera
 
 -- GUI SETUP
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SAB_Final_V5"
+ScreenGui.Name = "SAB_Mac_Stable"
 ScreenGui.Parent = CoreGui or LP:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
 local Frame = Instance.new("Frame")
 Frame.Size = UDim2.new(0, 200, 0, 180)
 Frame.Position = UDim2.new(0.05, 0, 0.4, 0)
-Frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+Frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
 Frame.Active = true
 Frame.Draggable = true 
 Frame.Parent = ScreenGui
@@ -59,43 +59,33 @@ local function createToggle(name, color, callback)
     end)
 end
 
--- 1. NET OVERRIDE (Required)
+-- 1. NET OVERRIDE (Purple)
 createToggle("Net Override", Color3.fromRGB(160, 50, 255), function(state)
     if state then sethiddenproperty(LP, "SimulationRadius", 10000) end
 end)
 
--- 2. SAB DESYNC (The Jitter)
+-- 2. SAB DESYNC (Green)
 local desyncActive = false
 createToggle("SAB Desync", Color3.fromRGB(0, 255, 180), function(state)
     desyncActive = state
 end)
 
--- 3. BLINK (Lag Snap)
+-- 3. BLINK (Orange)
 createToggle("Blink Snap", Color3.fromRGB(255, 150, 0), function(state)
     settings().Network.IncomingReplicationLag = state and 1000 or 0
 end)
 
--- THE FIX: RE-WRITING CAMERA LOGIC
-RS:BindToRenderStep("CameraFix", Enum.RenderPriority.Camera.Value + 1, function()
-    if desyncActive then
-        local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-        if Root then
-            -- This keeps the camera subject locked to a STATIC CFrame 
-            -- even if the RootPart is teleporting around.
-            Camera.Focus = Root.CFrame
-        end
-    end
-end)
-
--- THE JITTER (SAB)
+-- THE FIX: "POST-RENDER" JITTER
 RS.Heartbeat:Connect(function()
     if desyncActive then
         local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
         if Root then
             local oldCF = Root.CFrame
-            -- Fast Horizontal Flickering for the server
-            Root.CFrame = oldCF * CFrame.new(math.random(-15, 15), 0, math.random(-15, 15))
+            -- This creates the jitter for OTHER players
+            Root.CFrame = oldCF * CFrame.new(math.random(-12, 12), 0, math.random(-12, 12))
+            -- We wait exactly 1/60th of a second for the server to log the position
             RS.RenderStepped:Wait()
+            -- We put you back before the camera looks at you
             Root.CFrame = oldCF
         end
     end
