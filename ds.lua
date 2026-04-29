@@ -1,60 +1,72 @@
--- MAC DESYNC GUI (STABLE)
+-- MAC GUI: DESYNC + BLINK (FAKE LAG)
 local ScreenGui = Instance.new("ScreenGui")
-local ToggleButton = Instance.new("TextButton")
-local Corner = Instance.new("UICorner")
+local MainFrame = Instance.new("Frame")
+local BlinkBtn = Instance.new("TextButton")
+local DesyncBtn = Instance.new("TextButton")
+local UIListLayout = Instance.new("UIListLayout")
 
--- Setup GUI - Fallback for executors that block CoreGui
 local TargetParent = game:GetService("CoreGui") or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
-ScreenGui.Name = "MacDesync"
 ScreenGui.Parent = TargetParent
 ScreenGui.ResetOnSpawn = false
 
-ToggleButton.Parent = ScreenGui
-ToggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-ToggleButton.Position = UDim2.new(0.15, 0, 0.15, 0)
-ToggleButton.Size = UDim2.new(0, 160, 0, 50)
-ToggleButton.Text = "DESYNC: OFF"
-ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleButton.Font = Enum.Font.GothamBold
-ToggleButton.TextSize = 16
-ToggleButton.Draggable = true 
-ToggleButton.Active = true
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.Position = UDim2.new(0.1, 0, 0.1, 0)
+MainFrame.Size = UDim2.new(0, 160, 0, 110)
+MainFrame.Active = true
+MainFrame.Draggable = true
 
-Corner.CornerRadius = UDim.new(0, 10)
-Corner.Parent = ToggleButton
+UIListLayout.Parent = MainFrame
+UIListLayout.Padding = UDim.new(0, 5)
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-local Active = false
-local Connection
-
--- High-Priority Physics Logic
-local function ToggleLogic()
-    if Active then
-        Connection = game:GetService("RunService").PostSimulation:Connect(function()
-            local Char = game.Players.LocalPlayer.Character
-            local Root = Char and Char:FindFirstChild("HumanoidRootPart")
-            if Root then
-                local oldV = Root.AssemblyLinearVelocity
-                Root.AssemblyLinearVelocity = Vector3.new(0, -10000, 0)
-                game:GetService("RunService").RenderStepped:Wait()
-                Root.AssemblyLinearVelocity = oldV
-            end
-        end)
-    else
-        if Connection then Connection:Disconnect() end
-    end
+local function createBtn(text)
+    local btn = Instance.new("TextButton")
+    btn.Parent = MainFrame
+    btn.Size = UDim2.new(0, 150, 0, 45)
+    btn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Text = text
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 14
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    return btn
 end
 
--- MouseButton1Down is more reliable for Mac executors than Click
-ToggleButton.MouseButton1Down:Connect(function()
-    Active = not Active
-    if Active then
-        ToggleButton.Text = "DESYNC: ON"
-        ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+local bBtn = createBtn("Blink: OFF")
+local dBtn = createBtn("Desync: OFF")
+
+local blinkActive = false
+local desyncActive = false
+
+-- BLINK LOGIC (Stand in place for others)
+bBtn.MouseButton1Down:Connect(function()
+    blinkActive = not blinkActive
+    bBtn.Text = blinkActive and "Blink: ON" or "Blink: OFF"
+    bBtn.BackgroundColor3 = blinkActive and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(45, 45, 45)
+    
+    if blinkActive then
+        settings().Network.IncomingReplicationLag = 1000 -- Freezes you for others
     else
-        ToggleButton.Text = "DESYNC: OFF"
-        ToggleButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+        settings().Network.IncomingReplicationLag = 0 -- Teleports you to your real spot
     end
-    ToggleLogic()
 end)
 
-print("Script Loaded - Press Button to Toggle")
+-- DESYNC LOGIC
+dBtn.MouseButton1Down:Connect(function()
+    desyncActive = not desyncActive
+    dBtn.Text = desyncActive and "Desync: ON" or "Desync: OFF"
+    dBtn.BackgroundColor3 = desyncActive and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(45, 45, 45)
+end)
+
+game:GetService("RunService").PostSimulation:Connect(function()
+    if desyncActive then
+        local Root = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if Root then
+            local oldV = Root.AssemblyLinearVelocity
+            Root.AssemblyLinearVelocity = Vector3.new(0, -5000, 0)
+            game:GetService("RunService").RenderStepped:Wait()
+            Root.AssemblyLinearVelocity = oldV
+        end
+    end
+end)
