@@ -1,46 +1,53 @@
 -- MAC DESYNC GUI
 local ScreenGui = Instance.new("ScreenGui")
 local ToggleButton = Instance.new("TextButton")
+local Corner = Instance.new("UICorner")
 
--- Setup GUI
-ScreenGui.Parent = game.CoreGui
+-- Setup GUI (Using PlayerGui if CoreGui is restricted)
+local Parent = game:GetService("CoreGui") or game.Players.LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.Parent = Parent
+
 ToggleButton.Parent = ScreenGui
-ToggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 ToggleButton.Position = UDim2.new(0.1, 0, 0.1, 0)
 ToggleButton.Size = UDim2.new(0, 150, 0, 50)
 ToggleButton.Text = "Desync: OFF"
 ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleButton.Draggable = true
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextSize = 16
+ToggleButton.Active = true
+ToggleButton.Draggable = true 
+
+Corner.CornerRadius = ToolPoint.new(0, 8)
+Corner.Parent = ToggleButton
 
 local Active = false
 local Connection
 
--- Desync Logic
+-- New Physics Logic
 local function StartDesync()
     Connection = game:GetService("RunService").PostSimulation:Connect(function()
         local Char = game.Players.LocalPlayer.Character
         local Root = Char and Char:FindFirstChild("HumanoidRootPart")
         if Root then
             local oldV = Root.AssemblyLinearVelocity
-            Root.AssemblyLinearVelocity = Vector3.new(0, -9999, 0)
+            Root.AssemblyLinearVelocity = Vector3.new(0, -5000, 0)
             game:GetService("RunService").RenderStepped:Wait()
             Root.AssemblyLinearVelocity = oldV
         end
     end)
 end
 
--- Button Logic
+-- Toggle Logic
 ToggleButton.MouseButton1Click:Connect(function()
     Active = not Active
     if Active then
         ToggleButton.Text = "Desync: ON"
-        ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 180, 0)
         StartDesync()
     else
         ToggleButton.Text = "Desync: OFF"
-        ToggleButton.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
         if Connection then Connection:Disconnect() end
     end
 end)
-
-print("GUI Loaded - Click the button to toggle")
