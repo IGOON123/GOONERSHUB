@@ -1,6 +1,6 @@
 --[[
-    SAB BRAINROT - MAC SLIDE EDITION
-    No Velocity = No Welding Errors.
+    SAB BRAINROT - MAC ULTIMATE EDITION
+    Optimized for MacBook (No Velocity = No Welding Errors)
 ]]
 
 local LP = game:GetService("Players").LocalPlayer
@@ -10,14 +10,14 @@ local CoreGui = game:GetService("CoreGui")
 
 -- GUI SETUP
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SAB_Mac_Slide"
+ScreenGui.Name = "SAB_Final"
 ScreenGui.Parent = CoreGui or LP:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
 local Frame = Instance.new("Frame")
 Frame.Size = UDim2.new(0, 200, 0, 180)
 Frame.Position = UDim2.new(0.05, 0, 0.4, 0)
-Frame.BackgroundColor3 = Color3.fromRGB(5, 5, 5)
+Frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 Frame.Active = true
 Frame.Draggable = true 
 Frame.Parent = ScreenGui
@@ -58,15 +58,18 @@ local function createToggle(name, color, callback)
     end)
 end
 
--- 1. NET RADIUS (Purple)
-createToggle("Net Boost", Color3.fromRGB(150, 0, 255), function(state)
-    if state then sethiddenproperty(LP, "SimulationRadius", 10000) end
+-- 1. NET OVERRIDE (Essential for Mac)
+createToggle("Net Override", Color3.fromRGB(180, 0, 255), function(state)
+    if state then
+        sethiddenproperty(LP, "SimulationRadius", 10000)
+        sethiddenproperty(LP, "MaxSimulationRadius", 10000)
+    end
 end)
 
--- 2. THE SLIDE (The TikTok Jitter)
-local slideActive = false
-createToggle("SAB Slide", Color3.fromRGB(0, 200, 255), function(state)
-    slideActive = state
+-- 2. BRAINROT DESYNC (The TikTok Jitter)
+local desyncActive = false
+createToggle("SAB Desync", Color3.fromRGB(0, 255, 150), function(state)
+    desyncActive = state
 end)
 
 -- 3. BLINK (Lag Snap)
@@ -74,15 +77,14 @@ createToggle("Blink", Color3.fromRGB(255, 100, 0), function(state)
     settings().Network.IncomingReplicationLag = state and 1000 or 0
 end)
 
--- PHYSICS LOOP (SAB SLIDE METHOD)
+-- PHYSICS LOOP
 RS.Heartbeat:Connect(function()
-    if slideActive then
+    if desyncActive then
         local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
         if Root then
-            -- This moves your character 10 studs back and then back to your spot
-            -- It happens so fast (Heartbeat) that the server desyncs your hitbox
             local oldCF = Root.CFrame
-            Root.CFrame = oldCF * CFrame.new(0, 0, 10) 
+            -- Extremley fast CFrame shifting for the "ghosting" look
+            Root.CFrame = oldCF * CFrame.new(math.random(-5, 5), 0, math.random(-5, 5))
             RS.RenderStepped:Wait()
             Root.CFrame = oldCF
         end
