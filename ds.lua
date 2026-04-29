@@ -1,6 +1,6 @@
 --[[
-    SAB / XEN - MAC GHOST ROOT EDITION
-    100% SHAKE-FREE. Detaches camera from the physics jitter.
+    SAB / XEN - MAC TRUE SMOOTH EDITION
+    Forces the camera to ignore physics jitter.
 ]]
 
 local LP = game:GetService("Players").LocalPlayer
@@ -11,7 +11,7 @@ local Camera = workspace.CurrentCamera
 
 -- GUI SETUP
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SAB_Ghost_Mac"
+ScreenGui.Name = "SAB_Final_V5"
 ScreenGui.Parent = CoreGui or LP:WaitForChild("PlayerGui")
 ScreenGui.ResetOnSpawn = false
 
@@ -59,43 +59,42 @@ local function createToggle(name, color, callback)
     end)
 end
 
--- 1. NET OVERRIDE
+-- 1. NET OVERRIDE (Required)
 createToggle("Net Override", Color3.fromRGB(160, 50, 255), function(state)
     if state then sethiddenproperty(LP, "SimulationRadius", 10000) end
 end)
 
--- 2. SAB DESYNC (Green)
+-- 2. SAB DESYNC (The Jitter)
 local desyncActive = false
 createToggle("SAB Desync", Color3.fromRGB(0, 255, 180), function(state)
     desyncActive = state
 end)
 
--- 3. BLINK (Orange)
+-- 3. BLINK (Lag Snap)
 createToggle("Blink Snap", Color3.fromRGB(255, 150, 0), function(state)
     settings().Network.IncomingReplicationLag = state and 1000 or 0
 end)
 
--- THE FIX: CAMERA LERPING
--- This locks the camera to a "Ghost" position that doesn't jitter
-local ghostCF = CFrame.new()
-RS.RenderStepped:Connect(function()
-    local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-    if desyncActive and Root then
-        ghostCF = Root.CFrame
-        Camera.CameraSubject = Root
-        -- We force the Camera's Focus to stay at the "True" spot
-        Camera.Focus = ghostCF
+-- THE FIX: RE-WRITING CAMERA LOGIC
+RS:BindToRenderStep("CameraFix", Enum.RenderPriority.Camera.Value + 1, function()
+    if desyncActive then
+        local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+        if Root then
+            -- This keeps the camera subject locked to a STATIC CFrame 
+            -- even if the RootPart is teleporting around.
+            Camera.Focus = Root.CFrame
+        end
     end
 end)
 
--- THE JITTER (SAB STYLE)
+-- THE JITTER (SAB)
 RS.Heartbeat:Connect(function()
     if desyncActive then
         local Root = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
         if Root then
             local oldCF = Root.CFrame
-            -- Fast Horizontal Flickering
-            Root.CFrame = oldCF * CFrame.new(math.random(-12, 12), 0, math.random(-12, 12))
+            -- Fast Horizontal Flickering for the server
+            Root.CFrame = oldCF * CFrame.new(math.random(-15, 15), 0, math.random(-15, 15))
             RS.RenderStepped:Wait()
             Root.CFrame = oldCF
         end
